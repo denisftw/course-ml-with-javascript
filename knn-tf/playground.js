@@ -46,3 +46,15 @@ const topK = unstucked
     }, 0) / k;
 
 console.log(topK);
+
+const numbers = tf.tensor([
+    [1,2],
+    [3,4],
+    [5,6],
+]);
+
+const { mean, variance } = tf.moments(numbers, 0);
+
+const standart = numbers.sub(mean).div(variance.pow(0.5))
+
+console.log(standart.arraySync());

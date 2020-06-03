@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "playground": "node -r esm playground.js"
+    "playground": "node -r esm playground.js",
+    "index": "node -r esm index.js"
   },
   "author": "",
   "license": "ISC",
