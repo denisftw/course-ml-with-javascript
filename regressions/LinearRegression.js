@@ -12,6 +12,9 @@ export class LinearRegression {
     /** @type {tf.Tensor} */
     this.labels = tf.tensor(labels);
     this.features = this.processFeatures(featuresA);
+    this.mseHistory = [];
+    /** @type {number[]} */
+    this.bHistory = [];
 
     this.options = Object.assign({
       learningRate: 0.1,
@@ -19,7 +22,7 @@ export class LinearRegression {
     }, options);
 
     /** @type {tf.Tensor} */
-    this.weights = tf.zeros([2, 1]);
+    this.weights = tf.zeros([this.features.shape[1], 1]);
   }
 
   gradientDescent() {
@@ -34,7 +37,10 @@ export class LinearRegression {
 
   train() {
     for (let i = 0; i < this.options.iterations; i++) {
+      this.bHistory.push(this.weights.bufferSync().get(0, 0));
       this.gradientDescent();
+      this.recordMSE();
+      this.updateLearningRate();
     }
   }
 
@@ -73,6 +79,27 @@ export class LinearRegression {
     this.mean = mean;
     this.variance = variance;
     return features.sub(mean).div(variance.pow(0.5));
+  }
+
+  recordMSE() {
+    const mse = this.features.matMul(this.weights)
+      .sub(this.labels).pow(2).sum()
+      .div(this.features.shape[0])
+      .bufferSync()
+      .get();
+    this.mseHistory.unshift(mse);
+  }
+
+  updateLearningRate() {
+    if (this.mseHistory.length < 2) {
+      return;
+    }
+
+    if (this.mseHistory[0] > this.mseHistory[1]) {
+      this.options.learningRate /= 2;
+    } else {
+      this.options.learningRate *= 1.05;
+    }
   }
 }
 
