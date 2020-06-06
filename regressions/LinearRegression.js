@@ -8,14 +8,10 @@ export class LinearRegression {
    * @param {number[][]} labels
    * @param {{learningRate: number, iterations: number}} options
    */
-  constructor(features, labels, options) {
-    /** @type {tf.Tensor} */
-    this.features = tf.tensor(features);
+  constructor(featuresA, labels, options) {
     /** @type {tf.Tensor} */
     this.labels = tf.tensor(labels);
-
-    this.features = tf.ones([this.features.shape[0], 1]).
-      concat(this.features, 1);
+    this.features = this.processFeatures(featuresA);
 
     this.options = Object.assign({
       learningRate: 0.1,
@@ -40,6 +36,43 @@ export class LinearRegression {
     for (let i = 0; i < this.options.iterations; i++) {
       this.gradientDescent();
     }
+  }
+
+  /** @returns {number} */
+  test(testFeaturesA, testLabelsA) {
+    /** @type {tf.Tensor} */
+    const testLabels = tf.tensor(testLabelsA);
+    const testFeatures = this.processFeatures(testFeaturesA);
+    const predictions = testFeatures.matMul(this.weights);
+
+    const res = testLabels.sub(predictions).pow(2).sum().bufferSync().get();
+    const tot = testLabels.sub(testLabels.mean()).pow(2).sum().bufferSync().get();
+    return 1 - res / tot;
+  }
+
+  /**
+   * @param {number[][]} sourceFeatures
+   * @returns {tf.Tensor} */
+  processFeatures(sourceFeatures) {
+    /** @type {tf.Tensor} */
+    let features = tf.tensor(sourceFeatures);
+
+    if (this.mean && this.variance) {
+      features = features.sub(this.mean).div(this.variance.pow(0.5));
+    } else {
+      features = this.standardize(features);
+    }
+    features = tf.ones([features.shape[0], 1]).concat(features, 1);
+
+    return features;
+  }
+
+  /** @param {tf.Tensor} features */
+  standardize(features) {
+    const { mean, variance } = tf.moments(features, 0);
+    this.mean = mean;
+    this.variance = variance;
+    return features.sub(mean).div(variance.pow(0.5));
   }
 }
 

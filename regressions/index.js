@@ -12,11 +12,14 @@ let {features, labels, testFeatures, testLabels} =
 
 const linearRegression = new LinearRegression(features,
   labels, {
-    learningRate: 0.0001,
+    learningRate: 0.5,
     iterations: 100,
   });
 
 linearRegression.train();
+const r2 = linearRegression.test(testFeatures, testLabels);
 
+console.log('R2 = ', r2);
 const weights = linearRegression.weights.bufferSync();
-console.log(`M = ${weights.get(1,0)}, B = ${weights.get(0,0)}`)
+// console.log(`M = ${weights.get(1,0)}, B = ${weights.get(0,0)}`);
+
