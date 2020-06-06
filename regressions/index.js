@@ -21,7 +21,7 @@ linearRegression.train();
 const r2 = linearRegression.test(testFeatures, testLabels);
 
 plot({
-  y: linearRegression.mseHistory.reverse(),
+  x: linearRegression.mseHistory.reverse(),
   xLabel: 'Iteration #',
   yLabel: 'Mean Squared Error',
 });
