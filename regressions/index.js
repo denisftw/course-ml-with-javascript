@@ -7,14 +7,15 @@ let {features, labels, testFeatures, testLabels} =
  loadCSV('./cars.csv', {
      shuffle: true,
      splitTest: 50,
-     dataColumns: ['horsepower', 'displacement', 'weight'],
+     dataColumns: ['horsepower', 'weight', 'displacement'],
      labelColumns: ['mpg'],
  });
 
 const linearRegression = new LinearRegression(features,
   labels, {
     learningRate: 0.1,
-    iterations: 100,
+    iterations: 30,
+    batchSize: 10,
   });
 
 linearRegression.train();
@@ -30,3 +31,7 @@ console.log('R2 = ', r2);
 const weights = linearRegression.weights.bufferSync();
 // console.log(`M = ${weights.get(1,0)}, B = ${weights.get(0,0)}`);
 
+linearRegression.predict([
+  [120, 2, 380],
+  // [135, 2.1, 420],
+]).print();

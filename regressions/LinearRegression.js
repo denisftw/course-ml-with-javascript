@@ -6,15 +6,13 @@ export class LinearRegression {
    *
    * @param {number[][]} features
    * @param {number[][]} labels
-   * @param {{learningRate: number, iterations: number}} options
+   * @param {{learningRate: number, iterations: number, batchSize: number}} options
    */
   constructor(featuresA, labels, options) {
     /** @type {tf.Tensor} */
     this.labels = tf.tensor(labels);
     this.features = this.processFeatures(featuresA);
     this.mseHistory = [];
-    /** @type {number[]} */
-    this.bHistory = [];
 
     this.options = Object.assign({
       learningRate: 0.1,
@@ -25,23 +23,48 @@ export class LinearRegression {
     this.weights = tf.zeros([this.features.shape[1], 1]);
   }
 
-  gradientDescent() {
-    const currentGuesses = this.features.matMul(this.weights);
-    const differences = currentGuesses.sub(this.labels);
-    const slopes = this.features.transpose()
+  /**
+   *
+   * @param {tf.Tensor} features
+   * @param {tf.Tensor} labels
+   */
+  gradientDescent(features, labels) {
+    const currentGuesses = features.matMul(this.weights);
+    const differences = currentGuesses.sub(labels);
+    const slopes = features.transpose()
       .matMul(differences)
-      .div(this.features.shape[0]);
+      .div(features.shape[0]);
     this.weights = this.weights.sub(
       slopes.mul(this.options.learningRate));
   }
 
   train() {
+    const { batchSize } = this.options;
+    const batchQuantity = Math.floor(
+      this.features.shape[0] / batchSize);
+
     for (let i = 0; i < this.options.iterations; i++) {
-      this.bHistory.push(this.weights.bufferSync().get(0, 0));
-      this.gradientDescent();
+      for (let j = 0; j < batchQuantity; j++) {
+        const startIndex = j * batchSize;
+        const featureSlice = this.features.
+          slice([startIndex, 0], [batchSize, -1]);
+        const labelSlice = this.labels.
+          slice([startIndex, 0], [batchSize, -1]);
+        this.gradientDescent(featureSlice, labelSlice);
+      }
       this.recordMSE();
       this.updateLearningRate();
     }
+  }
+
+  /**
+   *
+   * @param {number[][]} observations
+   * @returns {tf.Tensor}
+   */
+  predict(observations) {
+    return this.processFeatures(observations)
+      .matMul(this.weights);
   }
 
   /** @returns {number} */
