@@ -11,6 +11,9 @@ function extractColumns(data, columnNames) {
   return extracted;
 }
 
+/**
+ * @returns {{features: number[][], labels: number[][], testFeatures: number[][], testLabels: number[][]}}
+ */
 module.exports = function loadCSV(
   filename,
   {
