@@ -1,10 +1,10 @@
 import * as tf from '@tensorflow/tfjs-node';
-import loadCSV from './load-csv';
+import loadCSV from '../load-csv';
 import { LinearRegression } from './LinearRegression';
 import plot from 'node-remote-plot';
 
 let {features, labels, testFeatures, testLabels} =
- loadCSV('./cars.csv', {
+ loadCSV('./data/cars.csv', {
      shuffle: true,
      splitTest: 50,
      dataColumns: ['horsepower', 'weight', 'displacement'],

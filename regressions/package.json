@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "playground": "node -r esm playground.js",
-    "index": "node -r esm index.js"
+    "linear": "node -r esm linear/index.js"
   },
   "author": "",
   "license": "ISC",
