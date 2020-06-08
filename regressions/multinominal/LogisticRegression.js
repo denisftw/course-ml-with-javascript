@@ -1,4 +1,3 @@
-
 import * as tf from '@tensorflow/tfjs-node';
 import _ from 'lodash';
 
@@ -7,7 +6,7 @@ export class LogisticRegression {
    *
    * @param {number[][]} features
    * @param {number[][]} labels
-   * @param {{learningRate: number, iterations: number, batchSize: number, decisionBoundary: number}} options
+   * @param {{learningRate: number, iterations: number, batchSize: number}} options
    */
   constructor(featuresA, labels, options) {
     /** @type {tf.Tensor} */
@@ -18,11 +17,11 @@ export class LogisticRegression {
     this.options = Object.assign({
       learningRate: 0.1,
       iterations: 1000,
-      decisionBoundary: 0.5,
     }, options);
 
     /** @type {tf.Tensor} */
-    this.weights = tf.zeros([this.features.shape[1], 1]);
+    this.weights = tf.zeros([this.features.shape[1],
+      this.labels.shape[1]]);
   }
 
   /**
@@ -31,7 +30,7 @@ export class LogisticRegression {
    * @param {tf.Tensor} labels
    */
   gradientDescent(features, labels) {
-    const currentGuesses = features.matMul(this.weights).sigmoid();
+    const currentGuesses = features.matMul(this.weights).softmax();
     const differences = currentGuesses.sub(labels);
     const slopes = features.transpose()
       .matMul(differences)
@@ -66,16 +65,20 @@ export class LogisticRegression {
    */
   predict(observations) {
     return this.processFeatures(observations)
-      .matMul(this.weights).sigmoid()
-      .greater(this.options.decisionBoundary)
-      .cast('float32');
+      .matMul(this.weights)
+      .softmax()
+      .argMax(1);
   }
 
   /** @returns {number} */
   test(testFeaturesA, testLabels) {
     const predictions = this.predict(testFeaturesA);
-    testLabels = tf.tensor(testLabels);
-    const incorrect = predictions.sub(testLabels).abs().sum().bufferSync().get();
+    testLabels = tf.tensor(testLabels).argMax(1);
+    const incorrect = predictions
+      .notEqual(testLabels)
+      .sum()
+      .bufferSync()
+      .get();
     return (predictions.shape[0] - incorrect) / predictions.shape[0];
   }
 
@@ -105,7 +108,7 @@ export class LogisticRegression {
   }
 
   recordCost() {
-    const guesses = this.features.matMul(this.weights).sigmoid();
+    const guesses = this.features.matMul(this.weights).softmax();
     const term1 = this.labels.transpose().matMul(guesses.log());
     const term2 = this.labels.mul(-1).add(1).transpose()
       .matMul(
