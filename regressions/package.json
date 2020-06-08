@@ -7,7 +7,7 @@
     "playground": "node -r esm playground.js",
     "linear": "node -r esm linear/index.js",
     "logistic": "node -r esm logistic/index.js",
-    "multinominal": "node -r esm multinominal/index.js"
+    "multinominal": "node --max-old-space-size=4096 -r esm multinominal/index.js"
   },
   "author": "",
   "license": "ISC",

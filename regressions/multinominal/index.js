@@ -1,38 +1,39 @@
-import loadCSV from '../load-csv';
 import _ from 'lodash';
 import { LogisticRegression } from './LogisticRegression';
 import plot from 'node-remote-plot';
+import mnist from 'mnist-data';
 
-let { features, labels, testFeatures, testLabels } =
-  loadCSV('./data/cars.csv', {
-    shuffle: true,
-    splitTest: 50,
-    dataColumns: ['horsepower', 'displacement', 'weight'],
-    labelColumns: ['mpg'],
-    converters: {
-      mpg: (value) => {
-        const mpg = parseFloat(value);
-        if (mpg < 15) {
-          return [1,0,0];
-        } else if (mpg < 30) {
-          return [0,1,0];
-        } else {
-          return [0,0,1];
-        }
-      },
-    }
+/** @returns {{features: number[][], labels: number[][]}} */
+function loadData() {
+  const mnistData = mnist.training(0, 60000);
+
+  const features = mnistData.images.values.map(
+    image => _.flatten(image));
+  const encodedLabels = mnistData.labels.values.map(label => {
+    const row = new Array(10).fill(0);
+    row[label] = 1;
+    return row;
   });
+  return { features, labels: encodedLabels };
+}
 
-labels = _.flatten(labels);
-
+const { features, labels } = loadData();
 
 const regression = new LogisticRegression(features, labels, {
-  learningRate: 0.5,
-  iterations: 100,
-  batchSize: 10,
+  learningRate: 1,
+  iterations: 20,
+  batchSize: 100,
 });
 
-
 regression.train();
-console.log(regression.test(
-  testFeatures, _.flatten(testLabels)));
+debugger;
+const testMnistData = mnist.training(0, 1000);
+const testFeatures = testMnistData.images.values.map(
+  image => _.flatten(image));
+const testEncodedLabels = testMnistData.labels.values.map(label => {
+  const row = new Array(10).fill(0);
+  row[label] = 1;
+  return row;
+});
+
+console.log(regression.test(testFeatures, testEncodedLabels));
