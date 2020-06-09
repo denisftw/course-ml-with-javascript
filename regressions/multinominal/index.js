@@ -20,13 +20,12 @@ function loadData() {
 const { features, labels } = loadData();
 
 const regression = new LogisticRegression(features, labels, {
-  learningRate: 1,
-  iterations: 20,
+  learningRate: 0.5,
+  iterations: 40,
   batchSize: 100,
 });
 
 regression.train();
-debugger;
 const testMnistData = mnist.training(0, 1000);
 const testFeatures = testMnistData.images.values.map(
   image => _.flatten(image));
@@ -37,3 +36,7 @@ const testEncodedLabels = testMnistData.labels.values.map(label => {
 });
 
 console.log(regression.test(testFeatures, testEncodedLabels));
+
+plot({
+  x: regression.costHistory.reverse(),
+});

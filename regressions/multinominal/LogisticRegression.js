@@ -35,7 +35,7 @@ export class LogisticRegression {
     const slopes = features.transpose()
       .matMul(differences)
       .div(features.shape[0]);
-    this.weights = this.weights.sub(
+    return this.weights.sub(
       slopes.mul(this.options.learningRate));
   }
 
@@ -47,11 +47,13 @@ export class LogisticRegression {
     for (let i = 0; i < this.options.iterations; i++) {
       for (let j = 0; j < batchQuantity; j++) {
         const startIndex = j * batchSize;
-        const featureSlice = this.features.
-          slice([startIndex, 0], [batchSize, -1]);
-        const labelSlice = this.labels.
-          slice([startIndex, 0], [batchSize, -1]);
-        this.gradientDescent(featureSlice, labelSlice);
+        this.weights = tf.tidy(() => {
+          const featureSlice = this.features.
+            slice([startIndex, 0], [batchSize, -1]);
+          const labelSlice = this.labels.
+            slice([startIndex, 0], [batchSize, -1]);
+          return this.gradientDescent(featureSlice, labelSlice);
+        })
       }
       this.recordCost();
       this.updateLearningRate();
@@ -111,10 +113,10 @@ export class LogisticRegression {
 
   recordCost() {
     const guesses = this.features.matMul(this.weights).softmax();
-    const term1 = this.labels.transpose().matMul(guesses.log());
+    const term1 = this.labels.transpose().matMul(guesses.add(1e-7).log());
     const term2 = this.labels.mul(-1).add(1).transpose()
       .matMul(
-        guesses.mul(-1).add(1).log()
+        guesses.mul(-1).add(1).add(1e-7).log()
       );
     const cost = term1.add(term2).div(this.features.shape[0])
       .mul(-1).bufferSync().get(0, 0);
